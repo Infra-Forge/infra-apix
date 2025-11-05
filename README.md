@@ -444,18 +444,21 @@ handler, err := runtime.NewHandler(runtime.Config{
 - CLI (`generate`, `spec-guard`)
 - Runtime endpoints with Swagger UI
 
-### 🚧 Milestone 2 (v0.2) - In Progress
+### ✅ Milestone 2 (v0.2) - Complete
 - ✅ Chi adapter (88% test coverage)
 - ✅ Gorilla/Mux adapter (88% test coverage)
 - ✅ Gin adapter (87.5% test coverage)
 - ✅ Fiber adapter (86.9% test coverage)
 - ✅ Shared error schema with standard 4xx/5xx responses
-- ⏳ Typed query/header parameter structs
-- ⏳ Middleware auto-detection for security
-- ⏳ Pagination headers, ETag support
+- ✅ Golden tests for spec validation
+- ✅ Integration tests for all 5 frameworks
 
-### 🔮 Milestone 3 (v0.3) - Future
-- Structured examples via tags
+### 🔮 Milestone 3 (v0.3) - Planned
+- Typed query/header parameter structs
+- Middleware auto-detection for security
+- Pagination headers, ETag support
+- Example applications for all frameworks
+- Structured examples via tags/helpers
 - Multipart/form-data support
 - Plugin hooks for custom metadata
 - Observability (logging, metrics)
@@ -491,6 +494,6 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ---
 
-**Status**: Milestone 1 complete, Milestone 2 mostly complete (5 framework adapters + error schema)
+**Status**: Milestone 1 & 2 complete (5 framework adapters, error schema, comprehensive tests)
 **Maintainer**: Teodorico Mazivila
 **Repository**: [github.com/Infra-Forge/apix](https://github.com/Infra-Forge/apix)
