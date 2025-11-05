@@ -15,39 +15,68 @@
   - Project-wide customizers (e.g., `RegisterCustomizer`) to mirror Spring's OpenApiCustomiser.
   - Config file (future milestone) to map `method:path` to overrides without code changes.
 
-### Library Architecture (Milestone 1)
-1. **Core Registry** (done): capture route metadata, deterministic snapshot, success status, security, headers.
-2. **Echo Adapter**: typed registration helpers (no method generics), support custom decoders, apply overrides pre-registration.
-3. **Spec Builder**: convert registry snapshot to OpenAPI 3.1 using kin-openapi.
-4. **CLI (`apix generate`)**: go:generate + CI deterministic output with DO-NOT-EDIT header.
-5. **Runtime Endpoints**: `/openapi.json` + optional `/swagger/*`, feature flags, caching.
-6. **Guardrails**: MCP `spec_guard`, CI drift check, pre-commit, CODEOWNERS.
+## Implementation Status
 
-### Milestones 2 & 3 Highlights
-- Add Chi/Gorilla adapters, advanced parameter inference, DX checks (pagination, ETag), examples, multipart support, plugin hooks, observability, migration guide.
+### ✅ Milestone 1 (v0.1) - COMPLETE
+1. **Core Registry** ✅ - Thread-safe route metadata storage, deterministic snapshot, success status, security, headers
+2. **Echo Adapter** ✅ - Typed registration helpers, custom decoders, validation hooks (82.5% coverage)
+3. **Spec Builder** ✅ - OpenAPI 3.1 generation with kin-openapi, deterministic output, 201/401/403 defaults (77.9% coverage)
+4. **CLI** ✅ - `apix generate` and `spec-guard` commands with DO-NOT-EDIT header (73% coverage)
+5. **Runtime Endpoints** ✅ - `/openapi.json` + optional Swagger UI, caching (81% coverage)
+6. **Tests** ✅ - Comprehensive test suite, 84% overall coverage
 
-## Immediate Next Steps
-1. **Echo Adapter Implementation**
-   - Helper functions for typed registration (request/response generics).
-   - Override-aware request decoding (DisallowUnknownFields, struct validation hooks).
-   - Ensure success status + responses align with registry defaults.
+### 🚧 Milestone 2 (v0.2) - IN PROGRESS
+**Completed:**
+1. **Chi Adapter** ✅ - Full Chi router integration with typed handlers (88% coverage)
+2. **Gorilla/Mux Adapter** ✅ - Full Mux router integration with typed handlers (88% coverage)
 
-2. **Spec Builder**
-   - Build `openapi.Builder` module translating `RouteRef` (with overrides) to OpenAPI 3.1.
-   - Deterministic ordering, security schemes, 201 Location/401/403 defaults.
+**Remaining:**
+3. **Typed Query/Header Parameters** ⏳ - Struct-based parameter extraction with type inference
+4. **Middleware Auto-detection** ⏳ - Automatic security scheme detection from middleware
+5. **DX Extras** ⏳ - Pagination headers (Link, X-Total-Count), ETag support
+6. **Shared Error Schema** ⏳ - Global error response schema for 4xx/5xx
+7. **Example Application** ⏳ - Complete working example demonstrating all features
 
-3. **CLI + Runtime**
-   - Implement `cmd/apix/main.go` for `generate` command (YAML/JSON output, DO-NOT-EDIT header, deterministic diff-friendly sorting).
-   - Runtime handler to serve spec + Swagger UI mount.
+### 🔮 Milestone 3 (v0.3) - PLANNED
+- Structured examples via tags/helpers
+- Additional content types (multipart/form-data, form-urlencoded)
+- Plugin hooks for custom metadata
+- Observability (logging, metrics)
+- Migration guide for swaggo users
 
-4. **Tests & Examples**
-   - Golden tests for builder output.
-   - Echo example application demonstrating overrides and guardrails.
+## Immediate Next Steps (Milestone 2 Completion)
+
+### Priority 1: Core Features
+1. **Shared Error Schema**
+   - Define standard `ErrorResponse` struct
+   - Auto-inject for 4xx/5xx responses
+   - Allow customization via builder options
+
+2. **Typed Query/Header Parameters**
+   - Support struct-based query parameter extraction
+   - Infer parameter types from struct tags
+   - Generate OpenAPI parameter definitions
+
+3. **Example Application**
+   - Create `examples/echo/`, `examples/chi/`, `examples/mux/`
+   - Demonstrate CRUD operations, security, validation
+   - Include `go:generate` workflow and CI integration
+
+### Priority 2: DX Enhancements
+4. **Pagination Headers**
+   - Auto-detect pagination patterns (offset/limit, cursor)
+   - Document Link, X-Total-Count headers
+   - Helper functions for common pagination schemes
+
+5. **Middleware Auto-detection**
+   - Scan middleware stack for JWT/Bearer auth
+   - Auto-inject security schemes
+   - Support custom middleware detection hooks
 
 ## Risks & Mitigations
-- Reflection misses → mitigated by override options/customizers.
-- Agent spec edits → enforced by guardrails (CI, MCP `spec_guard`, DO-NOT-EDIT header).
-- Performance on large services → caching + go:generate workflow.
-- Adoption friction → wrappers support incremental migration; documentation and examples prioritized.
+- Reflection misses → mitigated by override options/customizers ✅
+- Agent spec edits → enforced by guardrails (CI, MCP `spec_guard`, DO-NOT-EDIT header) ✅
+- Performance on large services → caching + go:generate workflow ✅
+- Adoption friction → wrappers support incremental migration; documentation and examples prioritized ⏳
 
 
