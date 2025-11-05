@@ -22,10 +22,11 @@ Current Go OpenAPI tooling (swaggo, spec-first generators) relies on comments or
 ## Features
 
 - ✅ **OpenAPI 3.1** spec generation with kin-openapi
-- ✅ **Multiple frameworks** - Echo, Chi, and Gorilla/Mux adapters
+- ✅ **5 Framework adapters** - Echo, Chi, Gorilla/Mux, Gin, and Fiber
 - ✅ **Struct tag parsing** (`json`, `validate`, `binding`)
 - ✅ **Nullable types** (pointer detection)
 - ✅ **Security schemes** (route-level and global)
+- ✅ **Standard error responses** (shared ErrorResponse schema for 4xx/5xx)
 - ✅ **Custom parameters** (query, path, header)
 - ✅ **Runtime endpoints** (`/openapi.json`, optional Swagger UI)
 - ✅ **CLI tool** (`apix generate`, `apix spec-guard`)
@@ -446,10 +447,12 @@ handler, err := runtime.NewHandler(runtime.Config{
 ### 🚧 Milestone 2 (v0.2) - In Progress
 - ✅ Chi adapter (88% test coverage)
 - ✅ Gorilla/Mux adapter (88% test coverage)
+- ✅ Gin adapter (87.5% test coverage)
+- ✅ Fiber adapter (86.9% test coverage)
+- ✅ Shared error schema with standard 4xx/5xx responses
 - ⏳ Typed query/header parameter structs
 - ⏳ Middleware auto-detection for security
 - ⏳ Pagination headers, ETag support
-- ⏳ Shared error schema
 
 ### 🔮 Milestone 3 (v0.3) - Future
 - Structured examples via tags
