@@ -36,6 +36,13 @@
 7. **Integration Tests** ✅ - Full integration tests for all 5 framework adapters
 
 ### 🔮 Milestone 3 (v0.3) - PLANNED
+**Core Features:**
+- **Typed Query/Header Parameters** - Struct-based parameter extraction with type inference
+- **Middleware Auto-detection** - Automatic security scheme detection from middleware stack
+- **DX Extras** - Pagination headers (Link, X-Total-Count), ETag support
+- **Example Applications** - Complete working examples for all 5 frameworks
+
+**Additional Features:**
 - Structured examples via tags/helpers
 - Additional content types (multipart/form-data, form-urlencoded)
 - Plugin hooks for custom metadata
