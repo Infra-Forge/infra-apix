@@ -2,7 +2,7 @@
 
 **Code-first OpenAPI 3.1 documentation for Go APIs**
 
-[![Go Version](https://img.shields.io/badge/go-1.22+-blue.svg)](https://go.dev/dl/)
+[![Go Version](https://img.shields.io/badge/go-1.25+-blue.svg)](https://go.dev/dl/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen.svg)](coverage.out)
 
