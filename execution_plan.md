@@ -25,17 +25,20 @@
 5. **Runtime Endpoints** ✅ - `/openapi.json` + optional Swagger UI, caching (81% coverage)
 6. **Tests** ✅ - Comprehensive test suite, 84% overall coverage
 
-### 🚧 Milestone 2 (v0.2) - IN PROGRESS
+### 🚧 Milestone 2 (v0.2) - MOSTLY COMPLETE
 **Completed:**
 1. **Chi Adapter** ✅ - Full Chi router integration with typed handlers (88% coverage)
 2. **Gorilla/Mux Adapter** ✅ - Full Mux router integration with typed handlers (88% coverage)
+3. **Gin Adapter** ✅ - Full Gin framework integration with typed handlers (87.5% coverage)
+4. **Fiber Adapter** ✅ - Full Fiber v3 framework integration with typed handlers (86.9% coverage)
+5. **Shared Error Schema** ✅ - Standard ErrorResponse with 4xx/5xx helpers (100% coverage)
 
-**Remaining:**
-3. **Typed Query/Header Parameters** ⏳ - Struct-based parameter extraction with type inference
-4. **Middleware Auto-detection** ⏳ - Automatic security scheme detection from middleware
-5. **DX Extras** ⏳ - Pagination headers (Link, X-Total-Count), ETag support
-6. **Shared Error Schema** ⏳ - Global error response schema for 4xx/5xx
-7. **Example Application** ⏳ - Complete working example demonstrating all features
+**Remaining (Deferred to v0.3):**
+6. **Typed Query/Header Parameters** ⏳ - Struct-based parameter extraction with type inference
+7. **Middleware Auto-detection** ⏳ - Automatic security scheme detection from middleware
+8. **DX Extras** ⏳ - Pagination headers (Link, X-Total-Count), ETag support
+9. **Example Application** ⏳ - Complete working example demonstrating all features
+10. **Golden Tests** ⏳ - Comprehensive golden test suite for spec generation
 
 ### 🔮 Milestone 3 (v0.3) - PLANNED
 - Structured examples via tags/helpers

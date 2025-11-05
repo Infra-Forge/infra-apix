@@ -474,7 +474,9 @@ make cover
 make cover-html
 ```
 
-Current coverage: **84%** (exceeds 80% target)
+Current coverage: **85%+** (exceeds 80% target)
+- Core: 89%
+- All framework adapters: 82.5%-88%
 
 ## Contributing
 
@@ -489,6 +491,6 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ---
 
-**Status**: Milestone 1 complete, Milestone 2 in progress (Chi & Mux adapters done)
+**Status**: Milestone 1 complete, Milestone 2 mostly complete (5 framework adapters + error schema)
 **Maintainer**: Teodorico Mazivila
 **Repository**: [github.com/Infra-Forge/apix](https://github.com/Infra-Forge/apix)
