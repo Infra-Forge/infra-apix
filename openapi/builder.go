@@ -353,6 +353,13 @@ func (b *Builder) schemaRefNonNull(t reflect.Type) (*openapi3.SchemaRef, error) 
 			s.Format = "uuid"
 			return schemaRef(s), nil
 		}
+		if isDecimal(t) {
+			s := openapi3.NewStringSchema()
+			s.Format = "decimal"
+			s.Description = "Decimal number represented as string for precision"
+			s.Example = "123.45"
+			return schemaRef(s), nil
+		}
 		return b.buildStructSchema(t)
 	default:
 		return nil, fmt.Errorf("unsupported type %s", t)
@@ -594,7 +601,16 @@ func componentName(t reflect.Type) string {
 }
 
 func sanitizeComponentName(name string) string {
-	replacer := strings.NewReplacer("-", "_", ".", "_", " ", "_")
+	replacer := strings.NewReplacer(
+		"-", "_",
+		".", "_",
+		" ", "_",
+		"[", "_",
+		"]", "_",
+		"<", "_",
+		">", "_",
+		",", "_",
+	)
 	return replacer.Replace(name)
 }
 
@@ -602,6 +618,10 @@ var timeType = reflect.TypeOf(time.Time{})
 
 func isUUID(t reflect.Type) bool {
 	return t.PkgPath() == "github.com/google/uuid" && t.Name() == "UUID"
+}
+
+func isDecimal(t reflect.Type) bool {
+	return t.PkgPath() == "github.com/shopspring/decimal" && t.Name() == "Decimal"
 }
 
 func schemaType(schema *openapi3.Schema, t string) {
