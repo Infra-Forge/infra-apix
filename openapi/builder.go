@@ -71,10 +71,13 @@ func (b *Builder) Build(routes []*apix.RouteRef) (*openapi3.T, error) {
 }
 
 func (b *Builder) addRoute(doc *openapi3.T, ref *apix.RouteRef) error {
-	pathItem := doc.Paths.Value(ref.Path)
+	// Normalize path to OpenAPI format (convert :param and *param to {param})
+	normalizedPath := normalizePath(ref.Path)
+
+	pathItem := doc.Paths.Value(normalizedPath)
 	if pathItem == nil {
 		pathItem = &openapi3.PathItem{}
-		doc.Paths.Set(ref.Path, pathItem)
+		doc.Paths.Set(normalizedPath, pathItem)
 	}
 
 	op := openapi3.NewOperation()
@@ -164,7 +167,7 @@ func (b *Builder) addRoute(doc *openapi3.T, ref *apix.RouteRef) error {
 		return fmt.Errorf("unsupported method %s", ref.Method)
 	}
 
-	doc.Paths.Set(ref.Path, pathItem)
+	// Note: pathItem is already set at normalizedPath on line 80, no need to set again
 	return nil
 }
 
@@ -373,19 +376,30 @@ func (b *Builder) buildStructSchema(t reflect.Type) (*openapi3.SchemaRef, error)
 		if ref, ok := b.schemaCache[t]; ok {
 			return ref, nil
 		}
-		ref := openapi3.NewSchemaRef("#/components/schemas/"+name, nil)
-		b.schemaCache[t] = ref
 
+		// Create the schema object
 		schema := openapi3.NewObjectSchema()
 		schema.Properties = make(map[string]*openapi3.SchemaRef)
 		schema.Required = []string{}
 		schema.AllOf = nil
-		b.doc.Components.Schemas[name] = &openapi3.SchemaRef{Value: schema}
 
+		// Create a schema ref with the actual value
+		schemaRef := &openapi3.SchemaRef{Value: schema}
+
+		// Add to components
+		b.doc.Components.Schemas[name] = schemaRef
+
+		// Cache the SAME schemaRef object (not a reference-only version)
+		// This ensures that when other schemas reference this type, they get
+		// the actual schema object, not just a $ref string
+		b.schemaCache[t] = schemaRef
+
+		// Populate the schema fields
 		if err := b.populateStructSchema(schema, t); err != nil {
 			return nil, err
 		}
-		return ref, nil
+
+		return schemaRef, nil
 	}
 
 	// anonymous/inline struct
@@ -622,6 +636,39 @@ func isUUID(t reflect.Type) bool {
 
 func isDecimal(t reflect.Type) bool {
 	return t.PkgPath() == "github.com/shopspring/decimal" && t.Name() == "Decimal"
+}
+
+// normalizePath converts framework-specific path parameter syntax to OpenAPI format
+// Converts :param (Echo, Gin, Fiber) to {param}, leaves {param} (Chi, Mux) unchanged
+func normalizePath(path string) string {
+	var normalized strings.Builder
+	i := 0
+	for i < len(path) {
+		ch := path[i]
+
+		if ch == ':' {
+			// Echo/Gin/Fiber style parameter - convert :param to {param}
+			normalized.WriteRune('{')
+			i++
+			// Copy parameter name
+			for i < len(path) {
+				ch = path[i]
+				if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' || ch == '-' {
+					normalized.WriteRune(rune(ch))
+					i++
+				} else {
+					break
+				}
+			}
+			normalized.WriteRune('}')
+		} else {
+			// Regular character or already in {param} format
+			normalized.WriteRune(rune(ch))
+			i++
+		}
+	}
+
+	return normalized.String()
 }
 
 func schemaType(schema *openapi3.Schema, t string) {
