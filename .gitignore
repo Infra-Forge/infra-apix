@@ -28,5 +28,23 @@ go.work.sum
 .env
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Example binaries (these are reference code, not distributable binaries)
+examples/*/infranotes
+examples/*/infranotes-*
+examples/*/myapp
+examples/*/*.exe
+
+# Build artifacts
+dist/
+build/
+bin/

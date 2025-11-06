@@ -22,10 +22,11 @@ Current Go OpenAPI tooling (swaggo, spec-first generators) relies on comments or
 ## Features
 
 - ✅ **OpenAPI 3.1** spec generation with kin-openapi
-- ✅ **Echo framework** adapter (Chi and Gorilla/Mux coming in v0.2)
+- ✅ **5 Framework adapters** - Echo, Chi, Gorilla/Mux, Gin, and Fiber
 - ✅ **Struct tag parsing** (`json`, `validate`, `binding`)
 - ✅ **Nullable types** (pointer detection)
 - ✅ **Security schemes** (route-level and global)
+- ✅ **Standard error responses** (shared ErrorResponse schema for 4xx/5xx)
 - ✅ **Custom parameters** (query, path, header)
 - ✅ **Runtime endpoints** (`/openapi.json`, optional Swagger UI)
 - ✅ **CLI tool** (`apix generate`, `apix spec-guard`)
@@ -39,7 +40,11 @@ go get github.com/Infra-Forge/apix
 
 ## Quick Start
 
-### 1. Define your models and handlers
+Choose your framework: [Echo](#echo-example) | [Chi](#chi-example) | [Gorilla/Mux](#gorillamux-example)
+
+### Echo Example
+
+#### 1. Define your models and handlers
 
 ```go
 package main
@@ -123,7 +128,89 @@ func main() {
 }
 ```
 
-### 4. Generate static spec with CLI
+### Chi Example
+
+```go
+package main
+
+import (
+    "context"
+    "net/http"
+    "github.com/Infra-Forge/apix"
+    chiadapter "github.com/Infra-Forge/apix/chi"
+    "github.com/go-chi/chi/v5"
+)
+
+func main() {
+    r := chi.NewRouter()
+    adapter := chiadapter.New(r)
+
+    // Register typed handlers
+    chiadapter.Post(adapter, "/api/items", createItemHandler,
+        apix.WithSummary("Create a new item"),
+        apix.WithTags("items"),
+        apix.WithSecurity("BearerAuth"),
+    )
+
+    chiadapter.Get(adapter, "/api/items/{id}", getItemHandler,
+        apix.WithSummary("Get item by ID"),
+        apix.WithTags("items"),
+    )
+
+    // Serve OpenAPI spec
+    handler, _ := runtime.NewHandler(runtime.Config{
+        Title:           "My API",
+        Version:         "1.0.0",
+        EnableSwaggerUI: true,
+    })
+    handler.RegisterHTTP(http.NewServeMux()) // or use Chi router
+
+    http.ListenAndServe(":8080", r)
+}
+```
+
+### Gorilla/Mux Example
+
+```go
+package main
+
+import (
+    "context"
+    "net/http"
+    "github.com/Infra-Forge/apix"
+    muxadapter "github.com/Infra-Forge/apix/mux"
+    "github.com/gorilla/mux"
+)
+
+func main() {
+    r := mux.NewRouter()
+    adapter := muxadapter.New(r)
+
+    // Register typed handlers
+    muxadapter.Post(adapter, "/api/items", createItemHandler,
+        apix.WithSummary("Create a new item"),
+        apix.WithTags("items"),
+        apix.WithSecurity("BearerAuth"),
+    )
+
+    muxadapter.Get(adapter, "/api/items/{id}", getItemHandler,
+        apix.WithSummary("Get item by ID"),
+        apix.WithTags("items"),
+    )
+
+    // Serve OpenAPI spec
+    handler, _ := runtime.NewHandler(runtime.Config{
+        Title:           "My API",
+        Version:         "1.0.0",
+        EnableSwaggerUI: true,
+    })
+    handler.RegisterHTTP(http.NewServeMux()) // or use Mux router
+
+    http.ListenAndServe(":8080", r)
+}
+```
+
+### Generate static spec with CLI
 
 ```bash
 # Install CLI
@@ -326,7 +413,7 @@ handler, err := runtime.NewHandler(runtime.Config{
          │
          ▼
 ┌─────────────────┐
-│ Framework       │  Echo (Chi/Gorilla in v0.2)
+│ Framework       │  Echo / Chi / Gorilla Mux
 │ Adapter         │  Registers routes + captures metadata
 └────────┬────────┘
          │
@@ -350,22 +437,28 @@ handler, err := runtime.NewHandler(runtime.Config{
 
 ## Roadmap
 
-### ✅ Milestone 1 (v0.1) - Current
+### ✅ Milestone 1 (v0.1) - Complete
 - Echo adapter with typed handlers
 - Struct tag parsing, nullable types
 - OpenAPI 3.1 builder with deterministic output
 - CLI (`generate`, `spec-guard`)
 - Runtime endpoints with Swagger UI
 
-### 🚧 Milestone 2 (v0.2) - Planned
-- Chi and Gorilla/Mux adapters
+### ✅ Milestone 2 (v0.2) - Complete
+- ✅ Chi adapter (88% test coverage)
+- ✅ Gorilla/Mux adapter (88% test coverage)
+- ✅ Gin adapter (87.5% test coverage)
+- ✅ Fiber adapter (86.9% test coverage)
+- ✅ Shared error schema with standard 4xx/5xx responses
+- ✅ Golden tests for spec validation
+- ✅ Integration tests for all 5 frameworks
+
+### 🔮 Milestone 3 (v0.3) - Planned
 - Typed query/header parameter structs
 - Middleware auto-detection for security
 - Pagination headers, ETag support
-- Shared error schema
-
-### 🔮 Milestone 3 (v0.3) - Future
-- Structured examples via tags
+- Example applications for all frameworks
+- Structured examples via tags/helpers
 - Multipart/form-data support
 - Plugin hooks for custom metadata
 - Observability (logging, metrics)
@@ -384,7 +477,9 @@ make cover
 make cover-html
 ```
 
-Current coverage: **84%** (exceeds 80% target)
+Current coverage: **85%+** (exceeds 80% target)
+- Core: 89%
+- All framework adapters: 82.5%-88%
 
 ## Contributing
 
@@ -397,14 +492,8 @@ Contributions are welcome! Please ensure:
 
 MIT License - see [LICENSE](LICENSE) for details
 
-## Credits
-
-Built with:
-- [kin-openapi](https://github.com/getkin/kin-openapi) - OpenAPI 3 implementation
-- [Echo](https://github.com/labstack/echo) - High performance Go web framework
-
 ---
 
-**Status**: Production-ready (Milestone 1 complete)
+**Status**: Milestone 1 & 2 complete (5 framework adapters, error schema, comprehensive tests)
 **Maintainer**: Teodorico Mazivila
 **Repository**: [github.com/Infra-Forge/apix](https://github.com/Infra-Forge/apix)
