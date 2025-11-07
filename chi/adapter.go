@@ -244,4 +244,3 @@ func isNoBody(t reflect.Type) bool {
 	}
 	return t == noBodyType
 }
-

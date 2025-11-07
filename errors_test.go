@@ -235,4 +235,3 @@ func TestCombiningStandardErrorsWithSpecificErrors(t *testing.T) {
 		t.Fatalf("expected custom 401 description")
 	}
 }
-

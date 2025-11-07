@@ -107,4 +107,3 @@ func WithServiceUnavailableError(description string) RouteOption {
 	}
 	return WithErrorResponse(http.StatusServiceUnavailable, description)
 }
-

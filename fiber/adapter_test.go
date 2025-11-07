@@ -302,4 +302,3 @@ func TestFiberAdapterPathParameters(t *testing.T) {
 		t.Fatalf("unexpected response")
 	}
 }
-

@@ -290,4 +290,3 @@ func TestGinAdapterPathParameters(t *testing.T) {
 		t.Fatalf("unexpected response")
 	}
 }
-
