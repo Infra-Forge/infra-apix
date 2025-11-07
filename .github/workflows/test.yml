@@ -7,10 +7,28 @@ on:
     branches: [main, develop]
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
 
   test:
     name: Test
     runs-on: ubuntu-latest
+    needs: lint
     strategy:
       matrix:
         go-version: [ '1.25']
