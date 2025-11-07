@@ -1,0 +1,97 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  test-before-release:
+    name: Test Before Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Run tests
+        run: go test -v -race ./...
+
+      - name: Run linter
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
+
+  semantic-release:
+    name: Semantic Release
+    needs: test-before-release
+    runs-on: ubuntu-latest
+    outputs:
+      new-release-published: ${{ steps.semantic.outputs.new_release_published }}
+      new-release-version: ${{ steps.semantic.outputs.new_release_version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Run semantic-release
+        id: semantic
+        uses: go-semantic-release/action@v1
+        with:
+          hooks: goreleaser
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-docs:
+    name: Publish to pkg.go.dev
+    needs: semantic-release
+    if: needs.semantic-release.outputs.new-release-published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger pkg.go.dev indexing
+        run: |
+          VERSION="${{ needs.semantic-release.outputs.new-release-version }}"
+          echo "Triggering pkg.go.dev indexing for github.com/Infra-Forge/apix@${VERSION}"
+          curl -X POST https://proxy.golang.org/github.com/Infra-Forge/apix@${VERSION}/list
+          # Wait for indexing
+          sleep 10
+          curl https://pkg.go.dev/github.com/Infra-Forge/apix@${VERSION}
+
+  notify-release:
+    name: Notify Release
+    needs: semantic-release
+    runs-on: ubuntu-latest
+    if: needs.semantic-release.outputs.new-release-published == 'true'
+    steps:
+      - name: Create release summary
+        run: |
+          VERSION="${{ needs.semantic-release.outputs.new-release-version }}"
+          echo "## Release ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Semantic version determined: ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Binaries built and published" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Available at: https://github.com/Infra-Forge/apix/releases/tag/${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "go get github.com/Infra-Forge/apix@${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "go install github.com/Infra-Forge/apix/cmd/apix@${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+

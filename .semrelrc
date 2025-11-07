@@ -1,0 +1,20 @@
+{
+  "plugins": {
+    "commit-analyzer": {
+      "name": "cz@^1.0.0"
+    },
+    "ci-condition": {
+      "name": "github@^1.0.0"
+    },
+    "changelog-generator": {
+      "name": "default@^1.0.0",
+      "options": {
+        "emojis": "true"
+      }
+    },
+    "provider": {
+      "name": "github@^1.0.0"
+    }
+  }
+}
+

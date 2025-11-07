@@ -1,0 +1,95 @@
+version: 2
+
+project_name: apix
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: apix-cli
+    main: ./cmd/apix
+    binary: apix
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: apix-archive
+    builds:
+      - apix-cli
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    files:
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: Infra-Forge
+    name: apix
+  draft: false
+  prerelease: auto
+  name_template: "Release {{.Version}}"
+  footer: |
+    ## Installation
+
+    ### Via go get
+    ```bash
+    go get github.com/Infra-Forge/apix@{{.Version}}
+    go install github.com/Infra-Forge/apix/cmd/apix@{{.Version}}
+    ```
+
+    ### Via direct download
+    Download the binary for your platform from the assets below.
+
+    ### Verify checksums
+    ```bash
+    sha256sum -c checksums.txt
+    ```
+
+    ## What's Changed
+    See the [full changelog](https://github.com/Infra-Forge/apix/blob/main/CHANGELOG.md) for details.
+
+    ## Documentation
+    - [README](https://github.com/Infra-Forge/apix#readme)
+    - [API Documentation](https://pkg.go.dev/github.com/Infra-Forge/apix@{{.Version}})
+    - [Migration Guide](https://github.com/Infra-Forge/apix/blob/main/MIGRATION_GUIDE.md)
+
