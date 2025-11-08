@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Infra-Forge/apix"
-	"github.com/Infra-Forge/apix/runtime"
+	apix "github.com/Infra-Forge/infra-apix"
+	"github.com/Infra-Forge/infra-apix/runtime"
 	echo "github.com/labstack/echo/v4"
 )
 

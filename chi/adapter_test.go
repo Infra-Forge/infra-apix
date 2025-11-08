@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Infra-Forge/apix"
-	chiadapter "github.com/Infra-Forge/apix/chi"
+	apix "github.com/Infra-Forge/infra-apix"
+	chiadapter "github.com/Infra-Forge/infra-apix/chi"
 	"github.com/go-chi/chi/v5"
 )
 

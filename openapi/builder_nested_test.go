@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Infra-Forge/apix"
-	"github.com/Infra-Forge/apix/openapi"
+	apix "github.com/Infra-Forge/infra-apix"
+	"github.com/Infra-Forge/infra-apix/openapi"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"

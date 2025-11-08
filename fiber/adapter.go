@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/Infra-Forge/apix"
+	apix "github.com/Infra-Forge/infra-apix"
 	"github.com/gofiber/fiber/v3"
 )
 

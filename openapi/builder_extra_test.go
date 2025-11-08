@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Infra-Forge/apix"
-	"github.com/Infra-Forge/apix/openapi"
+	apix "github.com/Infra-Forge/infra-apix"
+	"github.com/Infra-Forge/infra-apix/openapi"
 )
 
 type unionRequest struct {

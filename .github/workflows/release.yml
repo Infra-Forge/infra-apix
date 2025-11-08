@@ -191,24 +191,26 @@ jobs:
       - name: Create Release Notes
         id: release_notes
         run: |
-          cat << EOF > release_notes.md
+          cat << 'EOF' > release_notes.md
           ## Changes
 
-          ${{ needs.version.outputs.changelog }}
+          EOF
+          echo "${{ needs.version.outputs.changelog }}" >> release_notes.md
+          cat << 'EOF' >> release_notes.md
 
           ## Installation
-          \`\`\`bash
+          ```bash
           # Library
-          go get github.com/Infra-Forge/apix@${{ needs.version.outputs.new_version }}
+          go get github.com/Infra-Forge/infra-apix@${{ needs.version.outputs.new_version }}
 
           # CLI Tool
-          go install github.com/Infra-Forge/apix/cmd/apix@${{ needs.version.outputs.new_version }}
-          \`\`\`
+          go install github.com/Infra-Forge/infra-apix/cmd/apix@${{ needs.version.outputs.new_version }}
+          ```
 
           ## Documentation
-          - [pkg.go.dev](https://pkg.go.dev/github.com/Infra-Forge/apix@${{ needs.version.outputs.new_version }})
-          - [Examples](https://github.com/Infra-Forge/apix/tree/main/examples)
-          - [README](https://github.com/Infra-Forge/apix/blob/main/README.md)
+          - [pkg.go.dev](https://pkg.go.dev/github.com/Infra-Forge/infra-apix@${{ needs.version.outputs.new_version }})
+          - [Examples](https://github.com/${{ github.repository }}/tree/main/examples)
+          - [README](https://github.com/${{ github.repository }}/blob/main/README.md)
           EOF
 
       - name: Create Tag
@@ -241,9 +243,9 @@ jobs:
       - name: Release Success Notification
         run: |
           echo "🎉 apix ${{ needs.version.outputs.new_version }} has been successfully released!"
-          echo "📦 Go Module: github.com/Infra-Forge/apix@${{ needs.version.outputs.new_version }}"
-          echo "🔗 Release: https://github.com/Infra-Forge/apix/releases/tag/${{ needs.version.outputs.new_version }}"
-          echo "📚 Documentation: https://pkg.go.dev/github.com/Infra-Forge/apix@${{ needs.version.outputs.new_version }}"
+          echo "📦 Go Module: github.com/Infra-Forge/infra-apix@${{ needs.version.outputs.new_version }}"
+          echo "🔗 Release: https://github.com/${{ github.repository }}/releases/tag/${{ needs.version.outputs.new_version }}"
+          echo "📚 Documentation: https://pkg.go.dev/github.com/Infra-Forge/infra-apix@${{ needs.version.outputs.new_version }}"
 
       - name: Create release summary
         run: |
@@ -257,13 +259,13 @@ jobs:
           echo "### 📦 Installation" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
           echo "# Library" >> $GITHUB_STEP_SUMMARY
-          echo "go get github.com/Infra-Forge/apix@${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "go get github.com/Infra-Forge/infra-apix@${VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# CLI Tool" >> $GITHUB_STEP_SUMMARY
-          echo "go install github.com/Infra-Forge/apix/cmd/apix@${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "go install github.com/Infra-Forge/infra-apix/cmd/apix@${VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔗 Resources" >> $GITHUB_STEP_SUMMARY
-          echo "- [Release Notes](https://github.com/Infra-Forge/apix/releases/tag/${VERSION})" >> $GITHUB_STEP_SUMMARY
-          echo "- [Documentation](https://pkg.go.dev/github.com/Infra-Forge/apix@${VERSION})" >> $GITHUB_STEP_SUMMARY
-          echo "- [Examples](https://github.com/Infra-Forge/apix/tree/main/examples)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Release Notes](https://github.com/${{ github.repository }}/releases/tag/${VERSION})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Documentation](https://pkg.go.dev/github.com/Infra-Forge/infra-apix@${VERSION})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Examples](https://github.com/${{ github.repository }}/tree/main/examples)" >> $GITHUB_STEP_SUMMARY

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Infra-Forge/apix"
-	fiberadapter "github.com/Infra-Forge/apix/fiber"
+	apix "github.com/Infra-Forge/infra-apix"
+	fiberadapter "github.com/Infra-Forge/infra-apix/fiber"
 	"github.com/gofiber/fiber/v3"
 )
 

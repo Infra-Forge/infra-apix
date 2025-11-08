@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Infra-Forge/apix"
+	apix "github.com/Infra-Forge/infra-apix"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 

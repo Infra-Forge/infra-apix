@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Infra-Forge/apix"
-	ginadapter "github.com/Infra-Forge/apix/gin"
+	apix "github.com/Infra-Forge/infra-apix"
+	ginadapter "github.com/Infra-Forge/infra-apix/gin"
 	"github.com/gin-gonic/gin"
 )
 

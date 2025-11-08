@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Infra-Forge/apix"
-	echoadapter "github.com/Infra-Forge/apix/echo"
+	apix "github.com/Infra-Forge/infra-apix"
+	echoadapter "github.com/Infra-Forge/infra-apix/echo"
 	"github.com/labstack/echo/v4"
 )
 

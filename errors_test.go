@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/Infra-Forge/apix"
+	apix "github.com/Infra-Forge/infra-apix"
 )
 
 func TestErrorResponseType(t *testing.T) {

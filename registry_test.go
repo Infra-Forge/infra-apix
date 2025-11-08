@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Infra-Forge/apix"
+	apix "github.com/Infra-Forge/infra-apix"
 )
 
 type sampleReq struct {

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Infra-Forge/apix"
+	apix "github.com/Infra-Forge/infra-apix"
 )
 
 func TestRunGenerate(t *testing.T) {

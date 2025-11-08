@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/Infra-Forge/apix"
+	apix "github.com/Infra-Forge/infra-apix"
 	"github.com/labstack/echo/v4"
 )
 

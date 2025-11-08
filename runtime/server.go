@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Infra-Forge/apix"
-	"github.com/Infra-Forge/apix/openapi"
+	apix "github.com/Infra-Forge/infra-apix"
+	"github.com/Infra-Forge/infra-apix/openapi"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 )

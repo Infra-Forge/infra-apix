@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Infra-Forge/apix"
-	muxadapter "github.com/Infra-Forge/apix/mux"
+	apix "github.com/Infra-Forge/infra-apix"
+	muxadapter "github.com/Infra-Forge/infra-apix/mux"
 	"github.com/gorilla/mux"
 )
 
