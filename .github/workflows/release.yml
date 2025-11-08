@@ -217,7 +217,7 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git remote set-url origin https://github-actions[bot]:${GITHUB_TOKEN}@github.com/Infra-Forge/apix.git
+          git remote set-url origin https://github-actions[bot]:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git tag -a ${{ needs.version.outputs.new_version }} -m "Release ${{ needs.version.outputs.new_version }}"
           git push origin ${{ needs.version.outputs.new_version }}
 
