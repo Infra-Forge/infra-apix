@@ -435,6 +435,34 @@ handler, err := runtime.NewHandler(runtime.Config{
     └────────┘    └─────────┘    └─────────┘
 ```
 
+## Documentation
+
+### 📚 Guides
+
+- **[Getting Started](docs/GETTING_STARTED.md)** - Complete beginner's guide
+- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation
+- **[Framework Guides](docs/FRAMEWORK_GUIDES.md)** - Framework-specific integration guides
+- **[OpenAPI Generation](docs/OPENAPI_GENERATION.md)** - Advanced OpenAPI features
+- **[CLI Usage](docs/CLI_USAGE.md)** - Command-line tool documentation
+- **[Migration Guide](MIGRATION_GUIDE.md)** - Migrating from swaggo
+- **[Contributing](docs/CONTRIBUTING.md)** - How to contribute
+
+### 💡 Examples
+
+Complete working examples for all frameworks:
+
+- **[Echo Example](examples/infranotes/)** - Full-featured financial API
+- **[Chi Example](examples/infranotes-chi/)** - Chi router implementation
+- **[Gin Example](examples/infranotes-gin/)** - Gin framework implementation
+- **[Mux Example](examples/infranotes-mux/)** - Gorilla/Mux implementation
+
+Each example demonstrates:
+- CRUD operations
+- Nested response types
+- Pagination
+- Security schemes
+- Complex types (UUID, decimal.Decimal, time.Time)
+
 ## Roadmap
 
 ### ✅ Milestone 1 (v0.1) - Complete
@@ -452,17 +480,16 @@ handler, err := runtime.NewHandler(runtime.Config{
 - ✅ Shared error schema with standard 4xx/5xx responses
 - ✅ Golden tests for spec validation
 - ✅ Integration tests for all 5 frameworks
+- ✅ Comprehensive documentation
 
 ### 🔮 Milestone 3 (v0.3) - Planned
 - Typed query/header parameter structs
 - Middleware auto-detection for security
 - Pagination headers, ETag support
-- Example applications for all frameworks
 - Structured examples via tags/helpers
 - Multipart/form-data support
 - Plugin hooks for custom metadata
 - Observability (logging, metrics)
-- Migration guide from swaggo
 
 ## Testing
 
@@ -483,10 +510,20 @@ Current coverage: **85%+** (exceeds 80% target)
 
 ## Contributing
 
-Contributions are welcome! Please ensure:
-- Tests pass (`make test`)
-- Coverage remains above 80% (`make cover`)
-- Code is formatted (`make fmt`)
+We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for details.
+
+**Quick Start:**
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Ensure tests pass and coverage is above 80%
+5. Submit a pull request
+
+## Community
+
+- **Issues**: [GitHub Issues](https://github.com/Infra-Forge/apix/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Infra-Forge/apix/discussions)
+- **Examples**: [examples/](examples/)
 
 ## License
 
@@ -494,6 +531,6 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ---
 
-**Status**: Milestone 1 & 2 complete (5 framework adapters, error schema, comprehensive tests)
+**Status**: Milestone 1 & 2 complete (5 framework adapters, comprehensive documentation)
 **Maintainer**: Teodorico Mazivila
 **Repository**: [github.com/Infra-Forge/apix](https://github.com/Infra-Forge/apix)
