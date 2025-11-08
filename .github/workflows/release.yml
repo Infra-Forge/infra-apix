@@ -190,28 +190,32 @@ jobs:
 
       - name: Create Release Notes
         id: release_notes
+        env:
+          CHANGELOG: ${{ needs.version.outputs.changelog }}
+          VERSION: ${{ needs.version.outputs.new_version }}
+          REPO: ${{ github.repository }}
         run: |
-          cat << 'EOF' > release_notes.md
+          cat > release_notes.md << 'NOTES_EOF'
           ## Changes
 
-          EOF
-          echo "${{ needs.version.outputs.changelog }}" >> release_notes.md
-          cat << 'EOF' >> release_notes.md
+          NOTES_EOF
+          echo "${CHANGELOG}" >> release_notes.md
+          cat >> release_notes.md << NOTES_EOF
 
           ## Installation
-          ```bash
+          \`\`\`bash
           # Library
-          go get github.com/Infra-Forge/infra-apix@${{ needs.version.outputs.new_version }}
+          go get github.com/Infra-Forge/infra-apix@${VERSION}
 
           # CLI Tool
-          go install github.com/Infra-Forge/infra-apix/cmd/apix@${{ needs.version.outputs.new_version }}
-          ```
+          go install github.com/Infra-Forge/infra-apix/cmd/apix@${VERSION}
+          \`\`\`
 
           ## Documentation
-          - [pkg.go.dev](https://pkg.go.dev/github.com/Infra-Forge/infra-apix@${{ needs.version.outputs.new_version }})
-          - [Examples](https://github.com/${{ github.repository }}/tree/main/examples)
-          - [README](https://github.com/${{ github.repository }}/blob/main/README.md)
-          EOF
+          - [pkg.go.dev](https://pkg.go.dev/github.com/Infra-Forge/infra-apix@${VERSION})
+          - [Examples](https://github.com/${REPO}/tree/main/examples)
+          - [README](https://github.com/${REPO}/blob/main/README.md)
+          NOTES_EOF
 
       - name: Create Tag
         env:
