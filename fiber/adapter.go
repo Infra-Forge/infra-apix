@@ -207,7 +207,11 @@ func defaultErrorHandler(ctx context.Context, c fiber.Ctx, err error, useProblem
 		if useProblemDetails {
 			problem := apix.ToProblemDetails(err)
 			// Fiber's JSON() overrides Content-Type, so we need to marshal manually
-			data, _ := json.Marshal(problem)
+			data, marshalErr := json.Marshal(problem)
+			if marshalErr != nil {
+				// Fall back to plain error response if marshaling fails
+				return c.Status(status).JSON(fiber.Map{"error": err.Error()})
+			}
 			c.Set("Content-Type", "application/problem+json")
 			return c.Status(status).Send(data)
 		}

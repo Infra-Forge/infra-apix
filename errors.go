@@ -2,6 +2,7 @@ package apix
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -398,17 +399,11 @@ func ToProblemDetails(err error) *ProblemDetails {
 		return pd
 	}
 
-	// Check for StatusCoder interface
-	var statusCoder StatusCoder
-	if ok := false; ok {
-		_ = statusCoder
-		// This will be filled in by errors.As below
-	}
-
-	// Try to extract status from StatusCoder
+	// Try to extract status from StatusCoder interface (handles wrapped errors)
 	status := http.StatusInternalServerError
-	if httpErr, ok := err.(StatusCoder); ok {
-		status = httpErr.HTTPStatus()
+	var statusCoder StatusCoder
+	if errors.As(err, &statusCoder) {
+		status = statusCoder.HTTPStatus()
 	}
 
 	return &ProblemDetails{
