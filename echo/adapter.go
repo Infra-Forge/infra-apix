@@ -251,13 +251,30 @@ func ProblemDetailsErrorHandler(fallback echo.HTTPErrorHandler) echo.HTTPErrorHa
 			// Serialize as RFC 9457
 			c.Response().Header().Set("Content-Type", "application/problem+json")
 			c.Response().WriteHeader(problem.HTTPStatus())
-			json.NewEncoder(c.Response()).Encode(problem)
+			if encErr := json.NewEncoder(c.Response()).Encode(problem); encErr != nil {
+				// Log encoding error if available
+				c.Logger().Errorf("failed to encode problem details: %v", encErr)
+			}
 			return
 		}
 
 		// Fall back to default Echo error handler
 		if fallback != nil {
 			fallback(err, c)
+			return
+		}
+
+		// No fallback provided - create a safe default Problem Details response
+		defaultProblem := &apix.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Title:  "Internal Server Error",
+			Detail: err.Error(),
+		}
+		c.Response().Header().Set("Content-Type", "application/problem+json")
+		c.Response().WriteHeader(http.StatusInternalServerError)
+		if encErr := json.NewEncoder(c.Response()).Encode(defaultProblem); encErr != nil {
+			// Last resort: log the error and ensure status is set
+			c.Logger().Errorf("failed to encode default problem details: %v", encErr)
 		}
 	}
 }

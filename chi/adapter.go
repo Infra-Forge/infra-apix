@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	apix "github.com/Infra-Forge/infra-apix"
+	"github.com/Infra-Forge/infra-apix/internal/errorhandler"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -212,33 +213,15 @@ func defaultEncoder(ctx context.Context, w http.ResponseWriter, r *http.Request,
 }
 
 func defaultErrorHandler(ctx context.Context, w http.ResponseWriter, r *http.Request, err error, useProblemDetails bool) {
-	// First check for StatusCoder interface (new pattern)
-	var statusCoder apix.StatusCoder
-	if errors.As(err, &statusCoder) {
-		status := statusCoder.HTTPStatus()
-
-		// If Problem Details is enabled, serialize as RFC 9457
-		if useProblemDetails {
-			problem := apix.ToProblemDetails(err)
-			w.Header().Set("Content-Type", "application/problem+json")
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(problem)
-			return
-		}
-
-		http.Error(w, err.Error(), status)
-		return
-	}
-
-	// Then check for legacy httpError type (backward compatibility)
+	// Check for legacy httpError type first (backward compatibility)
 	var httpErr *httpError
 	if errors.As(err, &httpErr) {
 		http.Error(w, httpErr.message, httpErr.status)
 		return
 	}
 
-	// Default to 500 for unrecognized errors
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Use shared error handler for StatusCoder and Problem Details support
+	errorhandler.HandleError(w, err, useProblemDetails)
 }
 
 type httpError struct {
