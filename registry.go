@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/Infra-Forge/infra-apix/internal/logging"
 )
 
 // RouteMethod represents an HTTP method for an endpoint.
@@ -125,6 +127,9 @@ func RegisterRoute(ref *RouteRef) {
 		ref.SuccessStatus = DefaultSuccessStatus(ref.Method)
 	}
 	globalRegistry.routes = append(globalRegistry.routes, ref)
+
+	// Log route registration
+	logging.GetLogger().RouteRegistered(string(ref.Method), ref.Path, "summary", ref.Summary)
 }
 
 // Snapshot returns a copy of registered routes sorted by path+method for deterministic output.

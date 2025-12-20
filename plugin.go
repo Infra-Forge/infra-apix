@@ -1,6 +1,7 @@
 package apix
 
 import (
+	"github.com/Infra-Forge/infra-apix/internal/logging"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
@@ -43,6 +44,7 @@ func RegisterPlugin(p Plugin) {
 		return
 	}
 	pluginRegistry.plugins[p.Name()] = p
+	logging.GetLogger().PluginRegistered(p.Name())
 }
 
 // UnregisterPlugin removes a plugin from the global registry.
@@ -74,6 +76,7 @@ func ResetPlugins() {
 // executeOnRouteRegister calls OnRouteRegister for all registered plugins.
 func executeOnRouteRegister(ref *RouteRef) error {
 	for _, plugin := range pluginRegistry.plugins {
+		logging.GetLogger().PluginExecuted(plugin.Name(), "OnRouteRegister")
 		if err := plugin.OnRouteRegister(ref); err != nil {
 			return err
 		}
@@ -85,6 +88,7 @@ func executeOnRouteRegister(ref *RouteRef) error {
 // This is exported for use by the OpenAPI builder.
 func ExecuteOnSchemaGenerate(typeName string, schema *openapi3.Schema) error {
 	for _, plugin := range pluginRegistry.plugins {
+		logging.GetLogger().PluginExecuted(plugin.Name(), "OnSchemaGenerate", "type", typeName)
 		if err := plugin.OnSchemaGenerate(typeName, schema); err != nil {
 			return err
 		}
@@ -96,6 +100,7 @@ func ExecuteOnSchemaGenerate(typeName string, schema *openapi3.Schema) error {
 // This is exported for use by the OpenAPI builder.
 func ExecuteOnSpecBuild(doc *openapi3.T) error {
 	for _, plugin := range pluginRegistry.plugins {
+		logging.GetLogger().PluginExecuted(plugin.Name(), "OnSpecBuild")
 		if err := plugin.OnSpecBuild(doc); err != nil {
 			return err
 		}

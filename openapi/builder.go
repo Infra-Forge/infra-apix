@@ -9,6 +9,7 @@ import (
 	"time"
 
 	apix "github.com/Infra-Forge/infra-apix"
+	"github.com/Infra-Forge/infra-apix/internal/logging"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
@@ -72,6 +73,11 @@ func (b *Builder) Build(routes []*apix.RouteRef) (*openapi3.T, error) {
 	if err := apix.ExecuteOnSpecBuild(doc); err != nil {
 		return nil, err
 	}
+
+	// Log spec build completion
+	routeCount := len(routes)
+	schemaCount := len(doc.Components.Schemas)
+	logging.GetLogger().SpecBuilt(routeCount, schemaCount)
 
 	return doc, nil
 }
@@ -409,6 +415,9 @@ func (b *Builder) buildStructSchema(t reflect.Type) (*openapi3.SchemaRef, error)
 		if err := apix.ExecuteOnSchemaGenerate(name, schema); err != nil {
 			return nil, err
 		}
+
+		// Log schema generation
+		logging.GetLogger().SchemaGenerated(name)
 
 		return schemaRef, nil
 	}
