@@ -28,6 +28,10 @@ type Options struct {
 	Decoder         RequestDecoder
 	ResponseEncoder ResponseEncoder
 	ErrorHandler    ErrorHandler
+	// UseProblemDetails enables RFC 9457 Problem Details encoding for errors.
+	// When enabled, errors implementing StatusCoder will be serialized as
+	// application/problem+json instead of plain text.
+	UseProblemDetails bool
 }
 
 // FiberAdapter integrates apix route registration with fiber.App.
@@ -164,7 +168,7 @@ func (a *FiberAdapter) handleError(ctx context.Context, c fiber.Ctx, err error) 
 	if handler := a.opts.ErrorHandler; handler != nil {
 		return handler(ctx, c, err)
 	}
-	return defaultErrorHandler(ctx, c, err)
+	return defaultErrorHandler(ctx, c, err, a.opts.UseProblemDetails)
 }
 
 func defaultDecoder(ctx context.Context, c fiber.Ctx, dst any) error {
@@ -193,11 +197,35 @@ func defaultEncoder(ctx context.Context, c fiber.Ctx, status int, payload any) e
 	return c.Status(status).JSON(payload)
 }
 
-func defaultErrorHandler(ctx context.Context, c fiber.Ctx, err error) error {
+func defaultErrorHandler(ctx context.Context, c fiber.Ctx, err error, useProblemDetails bool) error {
+	// First check for StatusCoder interface (new pattern)
+	var statusCoder apix.StatusCoder
+	if errors.As(err, &statusCoder) {
+		status := statusCoder.HTTPStatus()
+
+		// If Problem Details is enabled, serialize as RFC 9457
+		if useProblemDetails {
+			problem := apix.ToProblemDetails(err)
+			// Fiber's JSON() overrides Content-Type, so we need to marshal manually
+			data, marshalErr := json.Marshal(problem)
+			if marshalErr != nil {
+				// Fall back to plain error response if marshaling fails
+				return c.Status(status).JSON(fiber.Map{"error": err.Error()})
+			}
+			c.Set("Content-Type", "application/problem+json")
+			return c.Status(status).Send(data)
+		}
+
+		return c.Status(status).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	// Then check for legacy httpError type (backward compatibility)
 	var httpErr *httpError
 	if errors.As(err, &httpErr) {
 		return c.Status(httpErr.status).JSON(fiber.Map{"error": httpErr.message})
 	}
+
+	// Default to 500 for unrecognized errors
 	return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 }
 

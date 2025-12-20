@@ -10,6 +10,7 @@ import (
 	"reflect"
 
 	apix "github.com/Infra-Forge/infra-apix"
+	"github.com/Infra-Forge/infra-apix/internal/errorhandler"
 	"github.com/gorilla/mux"
 )
 
@@ -33,6 +34,10 @@ type Options struct {
 	ResponseEncoder ResponseEncoder
 	ErrorHandler    ErrorHandler
 	Validator       Validator
+	// UseProblemDetails enables RFC 9457 Problem Details encoding for errors.
+	// When enabled, errors implementing StatusCoder will be serialized as
+	// application/problem+json instead of plain text.
+	UseProblemDetails bool
 }
 
 // MuxAdapter integrates apix route registration with gorilla/mux.Router.
@@ -171,7 +176,7 @@ func (a *MuxAdapter) handleError(ctx context.Context, w http.ResponseWriter, r *
 		handler(ctx, w, r, err)
 		return
 	}
-	defaultErrorHandler(ctx, w, r, err)
+	defaultErrorHandler(ctx, w, r, err, a.opts.UseProblemDetails)
 }
 
 func defaultDecoder(ctx context.Context, w http.ResponseWriter, r *http.Request, dst any, validator Validator) error {
@@ -207,13 +212,16 @@ func defaultEncoder(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	return json.NewEncoder(w).Encode(payload)
 }
 
-func defaultErrorHandler(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
+func defaultErrorHandler(ctx context.Context, w http.ResponseWriter, r *http.Request, err error, useProblemDetails bool) {
+	// Check for legacy httpError type first (backward compatibility)
 	var httpErr *httpError
 	if errors.As(err, &httpErr) {
 		http.Error(w, httpErr.message, httpErr.status)
 		return
 	}
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+
+	// Use shared error handler for StatusCoder and Problem Details support
+	errorhandler.HandleError(w, r, err, useProblemDetails)
 }
 
 type httpError struct {

@@ -27,6 +27,10 @@ type Options struct {
 	Decoder         RequestDecoder
 	ResponseEncoder ResponseEncoder
 	ErrorHandler    ErrorHandler
+	// UseProblemDetails enables RFC 9457 Problem Details encoding for errors.
+	// When enabled, errors implementing StatusCoder will be serialized as
+	// application/problem+json instead of plain text.
+	UseProblemDetails bool
 }
 
 // GinAdapter integrates apix route registration with gin.Engine.
@@ -165,7 +169,7 @@ func (a *GinAdapter) handleError(ctx context.Context, c *gin.Context, err error)
 		handler(ctx, c, err)
 		return
 	}
-	defaultErrorHandler(ctx, c, err)
+	defaultErrorHandler(ctx, c, err, a.opts.UseProblemDetails)
 }
 
 func defaultDecoder(ctx context.Context, c *gin.Context, dst any) error {
@@ -197,12 +201,32 @@ func defaultEncoder(ctx context.Context, c *gin.Context, status int, payload any
 	return nil
 }
 
-func defaultErrorHandler(ctx context.Context, c *gin.Context, err error) {
+func defaultErrorHandler(ctx context.Context, c *gin.Context, err error, useProblemDetails bool) {
+	// First check for StatusCoder interface (new pattern)
+	var statusCoder apix.StatusCoder
+	if errors.As(err, &statusCoder) {
+		status := statusCoder.HTTPStatus()
+
+		// If Problem Details is enabled, serialize as RFC 9457
+		if useProblemDetails {
+			problem := apix.ToProblemDetails(err)
+			c.Header("Content-Type", "application/problem+json")
+			c.JSON(status, problem)
+			return
+		}
+
+		c.JSON(status, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Then check for legacy httpError type (backward compatibility)
 	var httpErr *httpError
 	if errors.As(err, &httpErr) {
 		c.JSON(httpErr.status, gin.H{"error": httpErr.message})
 		return
 	}
+
+	// Default to 500 for unrecognized errors
 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 }
 

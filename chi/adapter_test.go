@@ -288,3 +288,133 @@ type mockValidator struct{}
 func (m *mockValidator) Validate(i any) error {
 	return fmt.Errorf("invalid")
 }
+
+func TestChiAdapterHTTPErrorHandling(t *testing.T) {
+	tests := []struct {
+		name           string
+		handler        apix.HandlerFunc[apix.NoBody, createItemResponse]
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name: "NotFound error",
+			handler: func(ctx context.Context, _ *apix.NoBody) (createItemResponse, error) {
+				return createItemResponse{}, apix.NotFound("user not found")
+			},
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   "http 404 [NOT_FOUND]: user not found",
+		},
+		{
+			name: "BadRequest error",
+			handler: func(ctx context.Context, _ *apix.NoBody) (createItemResponse, error) {
+				return createItemResponse{}, apix.BadRequest("invalid email")
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   "http 400 [BAD_REQUEST]: invalid email",
+		},
+		{
+			name: "Conflict error",
+			handler: func(ctx context.Context, _ *apix.NoBody) (createItemResponse, error) {
+				return createItemResponse{}, apix.Conflict("user already exists")
+			},
+			expectedStatus: http.StatusConflict,
+			expectedBody:   "http 409 [CONFLICT]: user already exists",
+		},
+		{
+			name: "Unauthorized error",
+			handler: func(ctx context.Context, _ *apix.NoBody) (createItemResponse, error) {
+				return createItemResponse{}, apix.Unauthorized("authentication required")
+			},
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   "http 401 [UNAUTHORIZED]: authentication required",
+		},
+		{
+			name: "Forbidden error",
+			handler: func(ctx context.Context, _ *apix.NoBody) (createItemResponse, error) {
+				return createItemResponse{}, apix.Forbidden("insufficient permissions")
+			},
+			expectedStatus: http.StatusForbidden,
+			expectedBody:   "http 403 [FORBIDDEN]: insufficient permissions",
+		},
+		{
+			name: "WithStatus custom error",
+			handler: func(ctx context.Context, _ *apix.NoBody) (createItemResponse, error) {
+				return createItemResponse{}, apix.WithStatus(http.StatusTeapot, "I'm a teapot")
+			},
+			expectedStatus: http.StatusTeapot,
+			expectedBody:   "http 418: I'm a teapot",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			apix.ResetRegistry()
+			r := chi.NewRouter()
+			adapter := chiadapter.New(r)
+
+			chiadapter.Get(adapter, "/test", tt.handler)
+
+			req := httptest.NewRequest(http.MethodGet, "/test", nil)
+			resp := httptest.NewRecorder()
+
+			r.ServeHTTP(resp, req)
+
+			if resp.Code != tt.expectedStatus {
+				t.Errorf("expected status %d, got %d", tt.expectedStatus, resp.Code)
+			}
+
+			body := strings.TrimSpace(resp.Body.String())
+			if !strings.Contains(body, tt.expectedBody) {
+				t.Errorf("expected body to contain %q, got %q", tt.expectedBody, body)
+			}
+		})
+	}
+}
+
+func TestChiAdapterProblemDetailsEncoding(t *testing.T) {
+	apix.ResetRegistry()
+
+	r := chi.NewRouter()
+	adapter := chiadapter.New(r, chiadapter.Options{
+		UseProblemDetails: true,
+	})
+
+	chiadapter.Get(adapter, "/test", func(ctx context.Context, _ *apix.NoBody) (createItemResponse, error) {
+		return createItemResponse{}, apix.NotFound("user not found")
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	resp := httptest.NewRecorder()
+
+	r.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusNotFound {
+		t.Errorf("expected status %d, got %d", http.StatusNotFound, resp.Code)
+	}
+
+	contentType := resp.Header().Get("Content-Type")
+	if contentType != "application/problem+json" {
+		t.Errorf("expected Content-Type 'application/problem+json', got %q", contentType)
+	}
+
+	var problem map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &problem); err != nil {
+		t.Fatalf("failed to unmarshal problem details: %v", err)
+	}
+
+	if problem["status"] != float64(http.StatusNotFound) {
+		t.Errorf("expected status %d, got %v", http.StatusNotFound, problem["status"])
+	}
+
+	if problem["detail"] != "user not found" {
+		t.Errorf("expected detail 'user not found', got %v", problem["detail"])
+	}
+
+	if problem["title"] != "Not Found" {
+		t.Errorf("expected title 'Not Found', got %v", problem["title"])
+	}
+
+	if problem["type"] != "about:blank#NOT_FOUND" {
+		t.Errorf("expected type 'about:blank#NOT_FOUND', got %v", problem["type"])
+	}
+}
