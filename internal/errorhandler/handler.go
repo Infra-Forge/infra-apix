@@ -8,18 +8,8 @@ import (
 	apix "github.com/Infra-Forge/infra-apix"
 )
 
-// LegacyHTTPError represents the legacy httpError interface for backward compatibility.
-// Adapters can implement this interface for their unexported httpError types.
-type LegacyHTTPError interface {
-	error
-	// HTTPStatus returns the HTTP status code (for legacy errors that don't implement StatusCoder)
-	HTTPStatus() int
-	// Message returns the error message
-	Message() string
-}
-
-// HandleError handles HTTP errors with support for StatusCoder interface,
-// RFC 9457 Problem Details, and legacy httpError types.
+// HandleError handles HTTP errors with support for StatusCoder interface
+// and RFC 9457 Problem Details.
 //
 // This function is shared between chi and mux adapters to eliminate duplication.
 func HandleError(w http.ResponseWriter, err error, useProblemDetails bool) {
@@ -31,9 +21,18 @@ func HandleError(w http.ResponseWriter, err error, useProblemDetails bool) {
 		// If Problem Details is enabled, serialize as RFC 9457
 		if useProblemDetails {
 			problem := apix.ToProblemDetails(err)
+
+			// Marshal first to check for errors before writing headers
+			data, marshalErr := json.Marshal(problem)
+			if marshalErr != nil {
+				// Marshaling failed - fall back to plain error response
+				http.Error(w, err.Error(), status)
+				return
+			}
+
 			w.Header().Set("Content-Type", "application/problem+json")
 			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(problem)
+			w.Write(data)
 			return
 		}
 

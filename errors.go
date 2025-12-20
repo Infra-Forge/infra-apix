@@ -376,27 +376,29 @@ func ToProblemDetails(err error) *ProblemDetails {
 		return nil
 	}
 
-	// Check if it's already a ProblemDetails
-	if pd, ok := err.(*ProblemDetails); ok {
+	// Check if it's already a ProblemDetails (handles wrapped errors)
+	var pd *ProblemDetails
+	if errors.As(err, &pd) {
 		return pd
 	}
 
-	// Check if it's an HTTPError
-	if httpErr, ok := err.(*HTTPError); ok {
-		pd := &ProblemDetails{
+	// Check if it's an HTTPError (handles wrapped errors)
+	var httpErr *HTTPError
+	if errors.As(err, &httpErr) {
+		result := &ProblemDetails{
 			Status: httpErr.Status,
 			Detail: httpErr.Message,
 		}
 
 		// Set title based on status code
-		pd.Title = http.StatusText(httpErr.Status)
+		result.Title = http.StatusText(httpErr.Status)
 
 		// Use error code as type if available
 		if httpErr.Code != "" {
-			pd.Type = fmt.Sprintf("about:blank#%s", httpErr.Code)
+			result.Type = fmt.Sprintf("about:blank#%s", httpErr.Code)
 		}
 
-		return pd
+		return result
 	}
 
 	// Try to extract status from StatusCoder interface (handles wrapped errors)

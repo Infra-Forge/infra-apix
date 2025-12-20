@@ -265,10 +265,14 @@ func ProblemDetailsErrorHandler(fallback echo.HTTPErrorHandler) echo.HTTPErrorHa
 		}
 
 		// No fallback provided - create a safe default Problem Details response
+		// Log the original error server-side for debugging
+		c.Logger().Errorf("unhandled error (no fallback): %v", err)
+
+		// Return generic message to client (don't leak internal error details)
 		defaultProblem := &apix.ProblemDetails{
 			Status: http.StatusInternalServerError,
 			Title:  "Internal Server Error",
-			Detail: err.Error(),
+			Detail: "An internal error occurred",
 		}
 		c.Response().Header().Set("Content-Type", "application/problem+json")
 		c.Response().WriteHeader(http.StatusInternalServerError)
