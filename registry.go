@@ -112,7 +112,13 @@ func ResetRegistry() {
 }
 
 // RegisterRoute registers a new route metadata entry.
+// Executes plugin hooks before adding the route to the registry.
 func RegisterRoute(ref *RouteRef) {
+	// Execute plugin hooks before registration
+	if err := executeOnRouteRegister(ref); err != nil {
+		panic(fmt.Sprintf("apix: plugin hook failed during route registration: %v", err))
+	}
+
 	globalRegistry.mu.Lock()
 	defer globalRegistry.mu.Unlock()
 	if ref.SuccessStatus == 0 {

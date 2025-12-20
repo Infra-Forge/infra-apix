@@ -67,6 +67,12 @@ func (b *Builder) Build(routes []*apix.RouteRef) (*openapi3.T, error) {
 	}
 
 	sortPaths(doc.Paths)
+
+	// Execute plugin hooks for spec building
+	if err := apix.ExecuteOnSpecBuild(doc); err != nil {
+		return nil, err
+	}
+
 	return doc, nil
 }
 
@@ -396,6 +402,11 @@ func (b *Builder) buildStructSchema(t reflect.Type) (*openapi3.SchemaRef, error)
 
 		// Populate the schema fields
 		if err := b.populateStructSchema(schema, t); err != nil {
+			return nil, err
+		}
+
+		// Execute plugin hooks for schema generation
+		if err := apix.ExecuteOnSchemaGenerate(name, schema); err != nil {
 			return nil, err
 		}
 
