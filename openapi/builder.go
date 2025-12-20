@@ -445,8 +445,15 @@ func (b *Builder) populateStructSchema(schema *openapi3.Schema, t reflect.Type) 
 		}
 		schema.Properties[jsonName] = childRef
 
+		// Apply field-level metadata from struct tags
+		childSchema := ensureSchema(childRef)
+
 		if fieldDescription := field.Tag.Get("description"); fieldDescription != "" {
-			ensureSchema(childRef).Description = fieldDescription
+			childSchema.Description = fieldDescription
+		}
+
+		if fieldExample := field.Tag.Get("example"); fieldExample != "" {
+			childSchema.Example = parseExampleValue(fieldExample, field.Type)
 		}
 
 		if isFieldRequired(field) {
@@ -505,6 +512,53 @@ func hasRequiredTag(field reflect.StructField) bool {
 		return true
 	}
 	return false
+}
+
+// parseExampleValue converts a string example value to the appropriate type
+// based on the field's reflect.Type. For complex types, returns the string as-is.
+func parseExampleValue(exampleStr string, fieldType reflect.Type) any {
+	// Dereference pointers to get the underlying type
+	for fieldType.Kind() == reflect.Pointer {
+		fieldType = fieldType.Elem()
+	}
+
+	switch fieldType.Kind() {
+	case reflect.String:
+		return exampleStr
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		// For integer types, try to parse as int
+		var val int64
+		if _, err := fmt.Sscanf(exampleStr, "%d", &val); err == nil {
+			return val
+		}
+		return exampleStr
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		// For unsigned integer types, try to parse as uint
+		var val uint64
+		if _, err := fmt.Sscanf(exampleStr, "%d", &val); err == nil {
+			return val
+		}
+		return exampleStr
+	case reflect.Float32, reflect.Float64:
+		// For float types, try to parse as float
+		var val float64
+		if _, err := fmt.Sscanf(exampleStr, "%f", &val); err == nil {
+			return val
+		}
+		return exampleStr
+	case reflect.Bool:
+		// For bool types, try to parse as bool
+		if exampleStr == "true" {
+			return true
+		} else if exampleStr == "false" {
+			return false
+		}
+		return exampleStr
+	default:
+		// For complex types (struct, slice, map, etc.), return string as-is
+		// OpenAPI will treat it as a string example
+		return exampleStr
+	}
 }
 
 func headerRef(h apix.HeaderRef) *openapi3.HeaderRef {

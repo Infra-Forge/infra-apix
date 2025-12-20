@@ -222,6 +222,16 @@ func WithRequestOverride(model any, contentType string, example any) RouteOption
 	}
 }
 
+// WithRequestExample sets an example value for the request body.
+// The example will be included in the OpenAPI spec for documentation.
+func WithRequestExample(example any) RouteOption {
+	return func(r *RouteRef) {
+		if example != nil {
+			r.RequestExample = example
+		}
+	}
+}
+
 // WithParameter adds a query/path/header parameter definition.
 func WithParameter(param Parameter) RouteOption {
 	return func(r *RouteRef) {
@@ -261,6 +271,16 @@ func WithExplicitModel(model any) ResponseOption {
 func WithHeaders(headers ...HeaderRef) ResponseOption {
 	return func(resp *ResponseRef) {
 		resp.Headers = append(resp.Headers, headers...)
+	}
+}
+
+// WithResponseExample sets an example value for the response.
+// The example will be included in the OpenAPI spec for documentation.
+func WithResponseExample(example any) ResponseOption {
+	return func(resp *ResponseRef) {
+		if example != nil {
+			resp.Example = example
+		}
 	}
 }
 
