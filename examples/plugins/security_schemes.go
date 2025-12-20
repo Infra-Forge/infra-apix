@@ -68,4 +68,3 @@ func (p *SecuritySchemesPlugin) OnSpecBuild(doc *openapi3.T) error {
 
 	return nil
 }
-

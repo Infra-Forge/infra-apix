@@ -144,4 +144,3 @@ func Warn(msg string, fields ...any) {
 func Error(msg string, fields ...any) {
 	GetLogger().Error(msg, fields...)
 }
-

@@ -69,42 +69,6 @@ jobs:
             exit 1
           fi
 
-  spec-guard:
-    name: OpenAPI Spec Guard
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-
-      - name: Generate OpenAPI spec
-        run: |
-          go run ./cmd/apix generate \
-            --title "Apix Library" \
-            --version "0.3.0" \
-            --out docs/openapi.yaml
-
-      - name: Check for spec drift
-        run: |
-          if ! git diff --exit-code docs/openapi.yaml; then
-            echo "❌ OpenAPI spec has drifted from code!"
-            echo "The generated spec differs from the committed version."
-            echo "This means routes, models, or documentation have changed."
-            echo ""
-            echo "To fix this:"
-            echo "  1. Run: make generate-spec"
-            echo "  2. Review the changes in docs/openapi.yaml"
-            echo "  3. Commit the updated spec"
-            echo ""
-            echo "Never edit docs/openapi.yaml manually!"
-            exit 1
-          fi
-          echo "✅ OpenAPI spec is up to date"
-
   build:
     name: Build
     runs-on: ubuntu-latest

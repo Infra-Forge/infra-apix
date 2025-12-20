@@ -37,4 +37,3 @@ func (p *CustomServersPlugin) OnSpecBuild(doc *openapi3.T) error {
 	doc.Servers = append(doc.Servers, p.Servers...)
 	return nil
 }
-

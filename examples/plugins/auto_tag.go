@@ -50,4 +50,3 @@ func (p *AutoTagPlugin) OnRouteRegister(ref *apix.RouteRef) error {
 	}
 	return nil
 }
-

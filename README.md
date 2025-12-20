@@ -382,10 +382,12 @@ All generated specs include a header warning against manual edits:
 
 ### 2. CI Drift Detection
 
-The `spec-guard` command detects when your committed spec drifts from your code:
+The `spec-guard` command detects when your committed spec drifts from your code.
+
+**Note:** This is for applications that **use** apix, not the apix library itself.
 
 ```yaml
-# .github/workflows/ci.yml
+# .github/workflows/ci.yml (in your application)
 jobs:
   spec-guard:
     runs-on: ubuntu-latest

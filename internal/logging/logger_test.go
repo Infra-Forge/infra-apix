@@ -154,4 +154,3 @@ func TestErrorOccurred(t *testing.T) {
 		t.Errorf("expected output to contain 'test error', got: %s", output)
 	}
 }
-

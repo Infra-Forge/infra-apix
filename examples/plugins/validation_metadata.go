@@ -48,4 +48,3 @@ func (p *ValidationMetadataPlugin) OnSchemaGenerate(typeName string, schema *ope
 
 	return nil
 }
-
