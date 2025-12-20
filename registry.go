@@ -232,6 +232,22 @@ func WithRequestExample(example any) RouteOption {
 	}
 }
 
+// WithMultipartFormData sets the request content type to multipart/form-data.
+// Use this for file upload endpoints.
+func WithMultipartFormData() RouteOption {
+	return func(r *RouteRef) {
+		r.RequestContentType = "multipart/form-data"
+	}
+}
+
+// WithFormURLEncoded sets the request content type to application/x-www-form-urlencoded.
+// Use this for traditional HTML form submissions.
+func WithFormURLEncoded() RouteOption {
+	return func(r *RouteRef) {
+		r.RequestContentType = "application/x-www-form-urlencoded"
+	}
+}
+
 // WithParameter adds a query/path/header parameter definition.
 func WithParameter(param Parameter) RouteOption {
 	return func(r *RouteRef) {

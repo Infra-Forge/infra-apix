@@ -439,10 +439,24 @@ func (b *Builder) populateStructSchema(schema *openapi3.Schema, t reflect.Type) 
 			schema.Properties = make(map[string]*openapi3.SchemaRef)
 		}
 
-		childRef, err := b.schemaRefFromType(field.Type)
-		if err != nil {
-			return err
+		// Check if field is marked as a file upload
+		isFile := field.Tag.Get("format") == "binary" || field.Tag.Get("format") == "file"
+
+		var childRef *openapi3.SchemaRef
+		var err error
+
+		if isFile {
+			// For file uploads, use string schema with binary format
+			fileSchema := openapi3.NewStringSchema()
+			fileSchema.Format = "binary"
+			childRef = &openapi3.SchemaRef{Value: fileSchema}
+		} else {
+			childRef, err = b.schemaRefFromType(field.Type)
+			if err != nil {
+				return err
+			}
 		}
+
 		schema.Properties[jsonName] = childRef
 
 		// Apply field-level metadata from struct tags
@@ -452,7 +466,7 @@ func (b *Builder) populateStructSchema(schema *openapi3.Schema, t reflect.Type) 
 			childSchema.Description = fieldDescription
 		}
 
-		if fieldExample := field.Tag.Get("example"); fieldExample != "" {
+		if fieldExample := field.Tag.Get("example"); fieldExample != "" && !isFile {
 			childSchema.Example = parseExampleValue(fieldExample, field.Type)
 		}
 
