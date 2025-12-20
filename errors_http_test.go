@@ -343,6 +343,61 @@ func TestProblemDetailsDefaultType(t *testing.T) {
 	}
 }
 
+func TestProblemDetailsReservedExtensionKeys(t *testing.T) {
+	// Test that extensions with reserved field names are ignored
+	problem := apix.NewProblemDetails(
+		http.StatusBadRequest,
+		"Bad Request",
+		"Invalid input provided",
+	)
+
+	// Try to overwrite reserved fields via extensions
+	problem.WithExtension("type", "https://malicious.com/override")
+	problem.WithExtension("title", "Malicious Title")
+	problem.WithExtension("status", 999)
+	problem.WithExtension("detail", "Malicious Detail")
+	problem.WithExtension("instance", "/malicious/path")
+	// Add a valid extension to verify non-reserved keys still work
+	problem.WithExtension("custom_field", "valid value")
+
+	data, err := problem.MarshalJSON()
+	if err != nil {
+		t.Fatalf("MarshalJSON failed: %v", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		t.Fatalf("Unmarshal failed: %v", err)
+	}
+
+	// Verify reserved fields were NOT overwritten by extensions
+	if result["type"] != "about:blank" {
+		t.Errorf("extension should not overwrite 'type', got %v", result["type"])
+	}
+
+	if result["title"] != "Bad Request" {
+		t.Errorf("extension should not overwrite 'title', got %v", result["title"])
+	}
+
+	if result["status"] != float64(http.StatusBadRequest) {
+		t.Errorf("extension should not overwrite 'status', got %v", result["status"])
+	}
+
+	if result["detail"] != "Invalid input provided" {
+		t.Errorf("extension should not overwrite 'detail', got %v", result["detail"])
+	}
+
+	// Instance is empty in the original, so it should not appear
+	if _, exists := result["instance"]; exists {
+		t.Errorf("extension should not add 'instance' when it was empty, got %v", result["instance"])
+	}
+
+	// Verify valid extension was added
+	if result["custom_field"] != "valid value" {
+		t.Errorf("valid extension should be added, got %v", result["custom_field"])
+	}
+}
+
 func TestToProblemDetailsFromHTTPError(t *testing.T) {
 	httpErr := apix.NotFound("user not found")
 

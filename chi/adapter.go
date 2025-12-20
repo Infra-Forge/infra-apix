@@ -221,7 +221,7 @@ func defaultErrorHandler(ctx context.Context, w http.ResponseWriter, r *http.Req
 	}
 
 	// Use shared error handler for StatusCoder and Problem Details support
-	errorhandler.HandleError(w, err, useProblemDetails)
+	errorhandler.HandleError(w, r, err, useProblemDetails)
 }
 
 type httpError struct {

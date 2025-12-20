@@ -361,8 +361,20 @@ func (p *ProblemDetails) MarshalJSON() ([]byte, error) {
 		m["instance"] = p.Instance
 	}
 
-	// Add extension members
+	// Add extension members (skip reserved field names to prevent overwrites)
+	reservedFields := map[string]bool{
+		"type":     true,
+		"title":    true,
+		"status":   true,
+		"detail":   true,
+		"instance": true,
+	}
+
 	for k, v := range p.Extensions {
+		// Skip extension keys that collide with reserved RFC 9457 fields
+		if reservedFields[k] {
+			continue
+		}
 		m[k] = v
 	}
 

@@ -3,6 +3,7 @@ package errorhandler
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	apix "github.com/Infra-Forge/infra-apix"
@@ -12,7 +13,7 @@ import (
 // and RFC 9457 Problem Details.
 //
 // This function is shared between chi and mux adapters to eliminate duplication.
-func HandleError(w http.ResponseWriter, err error, useProblemDetails bool) {
+func HandleError(w http.ResponseWriter, r *http.Request, err error, useProblemDetails bool) {
 	// First check for StatusCoder interface (new pattern)
 	var statusCoder apix.StatusCoder
 	if errors.As(err, &statusCoder) {
@@ -41,5 +42,9 @@ func HandleError(w http.ResponseWriter, err error, useProblemDetails bool) {
 	}
 
 	// Default to 500 for unrecognized errors
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Log the original error server-side for debugging
+	log.Printf("unrecognized error in %s %s: %v", r.Method, r.URL.Path, err)
+
+	// Return generic message to client (don't leak internal error details)
+	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 }
