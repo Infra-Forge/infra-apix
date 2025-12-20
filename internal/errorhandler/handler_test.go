@@ -86,4 +86,3 @@ func TestHandleErrorProblemDetailsWithExtensions(t *testing.T) {
 		t.Errorf("expected extension field in body, got %s", w.Body.String())
 	}
 }
-
