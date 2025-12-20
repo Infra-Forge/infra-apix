@@ -26,6 +26,10 @@ type Options struct {
 	Decoder         RequestDecoder
 	ResponseEncoder ResponseEncoder
 	ErrorHandler    ErrorTransformer
+	// UseProblemDetails enables RFC 9457 Problem Details encoding for errors.
+	// When enabled, errors implementing StatusCoder will be serialized as
+	// application/problem+json instead of plain text.
+	UseProblemDetails bool
 }
 
 // EchoAdapter integrates apix route registration with echo.Echo.
@@ -159,6 +163,23 @@ func (a *EchoAdapter) transformError(err error) error {
 	if tr := a.opts.ErrorHandler; tr != nil {
 		return tr(err)
 	}
+	return defaultErrorTransformer(err, a.opts.UseProblemDetails)
+}
+
+// defaultErrorTransformer converts apix errors to Echo HTTPError format.
+// If useProblemDetails is true, wraps the error with ProblemDetails metadata.
+func defaultErrorTransformer(err error, useProblemDetails bool) error {
+	// Check for StatusCoder interface (new pattern)
+	var statusCoder apix.StatusCoder
+	if errors.As(err, &statusCoder) {
+		// If Problem Details is enabled, wrap with ProblemDetails
+		// Echo will handle the serialization via custom error handler
+		if useProblemDetails {
+			return apix.ToProblemDetails(err)
+		}
+		return echo.NewHTTPError(statusCoder.HTTPStatus(), err.Error())
+	}
+	// Return error as-is for Echo's default error handler
 	return err
 }
 
@@ -211,4 +232,32 @@ func isNoBody(t reflect.Type) bool {
 		t = t.Elem()
 	}
 	return t == noBodyType
+}
+
+// ProblemDetailsErrorHandler returns an Echo error handler that serializes
+// ProblemDetails errors as application/problem+json.
+// Use this with e.HTTPErrorHandler when UseProblemDetails is enabled.
+//
+// Example:
+//
+//	e := echo.New()
+//	adapter := echoadapter.New(e, echoadapter.Options{UseProblemDetails: true})
+//	e.HTTPErrorHandler = echoadapter.ProblemDetailsErrorHandler(e.HTTPErrorHandler)
+func ProblemDetailsErrorHandler(fallback echo.HTTPErrorHandler) echo.HTTPErrorHandler {
+	return func(err error, c echo.Context) {
+		// Check if this is a ProblemDetails error
+		var problem *apix.ProblemDetails
+		if errors.As(err, &problem) {
+			// Serialize as RFC 9457
+			c.Response().Header().Set("Content-Type", "application/problem+json")
+			c.Response().WriteHeader(problem.HTTPStatus())
+			json.NewEncoder(c.Response()).Encode(problem)
+			return
+		}
+
+		// Fall back to default Echo error handler
+		if fallback != nil {
+			fallback(err, c)
+		}
+	}
 }

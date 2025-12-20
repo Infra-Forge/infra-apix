@@ -290,3 +290,46 @@ func TestGinAdapterPathParameters(t *testing.T) {
 		t.Fatalf("unexpected response")
 	}
 }
+
+func TestGinAdapterProblemDetailsEncoding(t *testing.T) {
+	apix.ResetRegistry()
+
+	e := gin.New()
+	adapter := ginadapter.New(e, ginadapter.Options{
+		UseProblemDetails: true,
+	})
+
+	ginadapter.Get(adapter, "/test", func(ctx context.Context, _ *apix.NoBody) (createItemResponse, error) {
+		return createItemResponse{}, apix.NotFound("user not found")
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	resp := httptest.NewRecorder()
+
+	e.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d", resp.Code)
+	}
+
+	contentType := resp.Header().Get("Content-Type")
+	// Gin adds charset=utf-8 automatically when using c.JSON()
+	if !strings.Contains(contentType, "application/problem+json") {
+		t.Fatalf("expected Content-Type to contain application/problem+json, got %s", contentType)
+	}
+
+	var problem map[string]any
+	if err := json.Unmarshal(resp.Body.Bytes(), &problem); err != nil {
+		t.Fatalf("failed to decode problem details: %v", err)
+	}
+
+	if problem["status"] != float64(404) {
+		t.Errorf("expected status 404, got %v", problem["status"])
+	}
+	if problem["title"] != "Not Found" {
+		t.Errorf("expected title 'Not Found', got %v", problem["title"])
+	}
+	if problem["detail"] != "user not found" {
+		t.Errorf("expected detail 'user not found', got %v", problem["detail"])
+	}
+}

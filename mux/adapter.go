@@ -33,6 +33,10 @@ type Options struct {
 	ResponseEncoder ResponseEncoder
 	ErrorHandler    ErrorHandler
 	Validator       Validator
+	// UseProblemDetails enables RFC 9457 Problem Details encoding for errors.
+	// When enabled, errors implementing StatusCoder will be serialized as
+	// application/problem+json instead of plain text.
+	UseProblemDetails bool
 }
 
 // MuxAdapter integrates apix route registration with gorilla/mux.Router.
@@ -171,7 +175,7 @@ func (a *MuxAdapter) handleError(ctx context.Context, w http.ResponseWriter, r *
 		handler(ctx, w, r, err)
 		return
 	}
-	defaultErrorHandler(ctx, w, r, err)
+	defaultErrorHandler(ctx, w, r, err, a.opts.UseProblemDetails)
 }
 
 func defaultDecoder(ctx context.Context, w http.ResponseWriter, r *http.Request, dst any, validator Validator) error {
@@ -207,12 +211,33 @@ func defaultEncoder(ctx context.Context, w http.ResponseWriter, r *http.Request,
 	return json.NewEncoder(w).Encode(payload)
 }
 
-func defaultErrorHandler(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) {
+func defaultErrorHandler(ctx context.Context, w http.ResponseWriter, r *http.Request, err error, useProblemDetails bool) {
+	// First check for StatusCoder interface (new pattern)
+	var statusCoder apix.StatusCoder
+	if errors.As(err, &statusCoder) {
+		status := statusCoder.HTTPStatus()
+
+		// If Problem Details is enabled, serialize as RFC 9457
+		if useProblemDetails {
+			problem := apix.ToProblemDetails(err)
+			w.Header().Set("Content-Type", "application/problem+json")
+			w.WriteHeader(status)
+			json.NewEncoder(w).Encode(problem)
+			return
+		}
+
+		http.Error(w, err.Error(), status)
+		return
+	}
+
+	// Then check for legacy httpError type (backward compatibility)
 	var httpErr *httpError
 	if errors.As(err, &httpErr) {
 		http.Error(w, httpErr.message, httpErr.status)
 		return
 	}
+
+	// Default to 500 for unrecognized errors
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
