@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/Infra-Forge/infra-apix/internal/logging"
 )
 
 // RouteMethod represents an HTTP method for an endpoint.
@@ -112,13 +114,22 @@ func ResetRegistry() {
 }
 
 // RegisterRoute registers a new route metadata entry.
+// Executes plugin hooks before adding the route to the registry.
 func RegisterRoute(ref *RouteRef) {
+	// Execute plugin hooks before registration
+	if err := executeOnRouteRegister(ref); err != nil {
+		panic(fmt.Sprintf("apix: plugin hook failed during route registration: %v", err))
+	}
+
 	globalRegistry.mu.Lock()
 	defer globalRegistry.mu.Unlock()
 	if ref.SuccessStatus == 0 {
 		ref.SuccessStatus = DefaultSuccessStatus(ref.Method)
 	}
 	globalRegistry.routes = append(globalRegistry.routes, ref)
+
+	// Log route registration
+	logging.GetLogger().RouteRegistered(string(ref.Method), ref.Path, "summary", ref.Summary)
 }
 
 // Snapshot returns a copy of registered routes sorted by path+method for deterministic output.
@@ -222,6 +233,32 @@ func WithRequestOverride(model any, contentType string, example any) RouteOption
 	}
 }
 
+// WithRequestExample sets an example value for the request body.
+// The example will be included in the OpenAPI spec for documentation.
+func WithRequestExample(example any) RouteOption {
+	return func(r *RouteRef) {
+		if example != nil {
+			r.RequestExample = example
+		}
+	}
+}
+
+// WithMultipartFormData sets the request content type to multipart/form-data.
+// Use this for file upload endpoints.
+func WithMultipartFormData() RouteOption {
+	return func(r *RouteRef) {
+		r.RequestContentType = "multipart/form-data"
+	}
+}
+
+// WithFormURLEncoded sets the request content type to application/x-www-form-urlencoded.
+// Use this for traditional HTML form submissions.
+func WithFormURLEncoded() RouteOption {
+	return func(r *RouteRef) {
+		r.RequestContentType = "application/x-www-form-urlencoded"
+	}
+}
+
 // WithParameter adds a query/path/header parameter definition.
 func WithParameter(param Parameter) RouteOption {
 	return func(r *RouteRef) {
@@ -261,6 +298,16 @@ func WithExplicitModel(model any) ResponseOption {
 func WithHeaders(headers ...HeaderRef) ResponseOption {
 	return func(resp *ResponseRef) {
 		resp.Headers = append(resp.Headers, headers...)
+	}
+}
+
+// WithResponseExample sets an example value for the response.
+// The example will be included in the OpenAPI spec for documentation.
+func WithResponseExample(example any) ResponseOption {
+	return func(resp *ResponseRef) {
+		if example != nil {
+			resp.Example = example
+		}
 	}
 }
 

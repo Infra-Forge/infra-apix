@@ -9,6 +9,7 @@ import (
 	"time"
 
 	apix "github.com/Infra-Forge/infra-apix"
+	"github.com/Infra-Forge/infra-apix/internal/logging"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
@@ -67,6 +68,17 @@ func (b *Builder) Build(routes []*apix.RouteRef) (*openapi3.T, error) {
 	}
 
 	sortPaths(doc.Paths)
+
+	// Execute plugin hooks for spec building
+	if err := apix.ExecuteOnSpecBuild(doc); err != nil {
+		return nil, err
+	}
+
+	// Log spec build completion
+	routeCount := len(routes)
+	schemaCount := len(doc.Components.Schemas)
+	logging.GetLogger().SpecBuilt(routeCount, schemaCount)
+
 	return doc, nil
 }
 
@@ -399,6 +411,14 @@ func (b *Builder) buildStructSchema(t reflect.Type) (*openapi3.SchemaRef, error)
 			return nil, err
 		}
 
+		// Execute plugin hooks for schema generation
+		if err := apix.ExecuteOnSchemaGenerate(name, schema); err != nil {
+			return nil, err
+		}
+
+		// Log schema generation
+		logging.GetLogger().SchemaGenerated(name)
+
 		return schemaRef, nil
 	}
 
@@ -439,14 +459,35 @@ func (b *Builder) populateStructSchema(schema *openapi3.Schema, t reflect.Type) 
 			schema.Properties = make(map[string]*openapi3.SchemaRef)
 		}
 
-		childRef, err := b.schemaRefFromType(field.Type)
-		if err != nil {
-			return err
+		// Check if field is marked as a file upload
+		isFile := field.Tag.Get("format") == "binary" || field.Tag.Get("format") == "file"
+
+		var childRef *openapi3.SchemaRef
+		var err error
+
+		if isFile {
+			// For file uploads, use string schema with binary format
+			fileSchema := openapi3.NewStringSchema()
+			fileSchema.Format = "binary"
+			childRef = &openapi3.SchemaRef{Value: fileSchema}
+		} else {
+			childRef, err = b.schemaRefFromType(field.Type)
+			if err != nil {
+				return err
+			}
 		}
+
 		schema.Properties[jsonName] = childRef
 
+		// Apply field-level metadata from struct tags
+		childSchema := ensureSchema(childRef)
+
 		if fieldDescription := field.Tag.Get("description"); fieldDescription != "" {
-			ensureSchema(childRef).Description = fieldDescription
+			childSchema.Description = fieldDescription
+		}
+
+		if fieldExample := field.Tag.Get("example"); fieldExample != "" && !isFile {
+			childSchema.Example = parseExampleValue(fieldExample, field.Type)
 		}
 
 		if isFieldRequired(field) {
@@ -505,6 +546,54 @@ func hasRequiredTag(field reflect.StructField) bool {
 		return true
 	}
 	return false
+}
+
+// parseExampleValue converts a string example value to the appropriate type
+// based on the field's reflect.Type. For complex types, returns the string as-is.
+func parseExampleValue(exampleStr string, fieldType reflect.Type) any {
+	// Dereference pointers to get the underlying type
+	for fieldType.Kind() == reflect.Pointer {
+		fieldType = fieldType.Elem()
+	}
+
+	switch fieldType.Kind() {
+	case reflect.String:
+		return exampleStr
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		// For integer types, try to parse as int
+		var val int64
+		if _, err := fmt.Sscanf(exampleStr, "%d", &val); err == nil {
+			return val
+		}
+		return exampleStr
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		// For unsigned integer types, try to parse as uint
+		var val uint64
+		if _, err := fmt.Sscanf(exampleStr, "%d", &val); err == nil {
+			return val
+		}
+		return exampleStr
+	case reflect.Float32, reflect.Float64:
+		// For float types, try to parse as float
+		var val float64
+		if _, err := fmt.Sscanf(exampleStr, "%f", &val); err == nil {
+			return val
+		}
+		return exampleStr
+	case reflect.Bool:
+		// For bool types, try to parse as bool (case-insensitive)
+		lowerStr := strings.ToLower(exampleStr)
+		if lowerStr == "true" {
+			return true
+		} else if lowerStr == "false" {
+			return false
+		}
+		return exampleStr
+	default:
+		// For complex types (struct, slice, map, etc.), return string as-is
+		// OpenAPI will treat it as a string example
+		return exampleStr
+	}
 }
 
 func headerRef(h apix.HeaderRef) *openapi3.HeaderRef {
