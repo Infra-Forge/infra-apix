@@ -1,6 +1,8 @@
 package plugins
 
 import (
+	"strings"
+
 	apix "github.com/Infra-Forge/infra-apix"
 )
 
@@ -34,7 +36,7 @@ func NewAutoTagPlugin(rules map[string]string) *AutoTagPlugin {
 // OnRouteRegister adds tags to routes based on path prefix matching.
 func (p *AutoTagPlugin) OnRouteRegister(ref *apix.RouteRef) error {
 	for prefix, tag := range p.Rules {
-		if len(ref.Path) >= len(prefix) && ref.Path[:len(prefix)] == prefix {
+		if strings.HasPrefix(ref.Path, prefix) {
 			// Check if tag already exists
 			exists := false
 			for _, existingTag := range ref.Tags {

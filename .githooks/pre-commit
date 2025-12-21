@@ -59,11 +59,16 @@ echo "   Checking spec: $FOUND_SPEC"
 
 # Generate fresh spec to temp file
 TEMP_SPEC=$(mktemp)
-trap "rm -f $TEMP_SPEC" EXIT
+TEMP_ERR=$(mktemp)
+trap "rm -f $TEMP_SPEC $TEMP_ERR" EXIT
 
-if ! $APIX_CMD generate --out "$TEMP_SPEC" 2>/dev/null; then
+if ! $APIX_CMD generate --out "$TEMP_SPEC" 2>"$TEMP_ERR"; then
     echo -e "${RED}❌ Failed to generate OpenAPI spec${NC}"
-    echo "   Run '$APIX_CMD generate' manually to see the error"
+    echo ""
+    if [ -s "$TEMP_ERR" ]; then
+        echo "Error output:"
+        cat "$TEMP_ERR"
+    fi
     exit 1
 fi
 
