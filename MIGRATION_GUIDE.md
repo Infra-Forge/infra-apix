@@ -674,7 +674,3 @@ logging.SetLogger(logging.NewJSONLogger(slog.LevelDebug))
 ---
 
 **Happy migrating! 🚀**
-
-```
-
-

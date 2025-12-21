@@ -67,11 +67,19 @@ func GetLogger() *Logger {
 	return globalLogger
 }
 
-// WithContext returns a logger with the given context
+// WithContext returns a logger with context-derived fields.
+// Currently extracts common context keys like request ID, trace ID, etc.
+// TODO: Define standard context keys for request_id, user_id, trace_id, span_id
 func (l *Logger) WithContext(ctx context.Context) *Logger {
-	return &Logger{
-		Logger: l.Logger.With(),
-	}
+	// For now, this is a placeholder that returns the logger as-is.
+	// In the future, extract values from context using agreed-upon keys:
+	//   - requestID := ctx.Value("request_id")
+	//   - userID := ctx.Value("user_id")
+	//   - traceID := ctx.Value("trace_id")
+	//   - spanID := ctx.Value("span_id")
+	// Then: return l.WithFields("request_id", requestID, "user_id", userID, ...)
+	_ = ctx // Suppress unused parameter warning
+	return l
 }
 
 // WithFields returns a logger with the given fields

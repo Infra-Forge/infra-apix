@@ -581,10 +581,11 @@ func parseExampleValue(exampleStr string, fieldType reflect.Type) any {
 		}
 		return exampleStr
 	case reflect.Bool:
-		// For bool types, try to parse as bool
-		if exampleStr == "true" {
+		// For bool types, try to parse as bool (case-insensitive)
+		lowerStr := strings.ToLower(exampleStr)
+		if lowerStr == "true" {
 			return true
-		} else if exampleStr == "false" {
+		} else if lowerStr == "false" {
 			return false
 		}
 		return exampleStr
