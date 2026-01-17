@@ -713,6 +713,8 @@ func sanitizeComponentName(name string) string {
 		"<", "_",
 		">", "_",
 		",", "_",
+		"*", "_",
+		"/", "_",
 	)
 	return replacer.Replace(name)
 }
