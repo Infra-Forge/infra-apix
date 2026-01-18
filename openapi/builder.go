@@ -297,6 +297,15 @@ func (b *Builder) schemaRefFromType(t reflect.Type) (*openapi3.SchemaRef, error)
 
 func (b *Builder) schemaRefNonNull(t reflect.Type) (*openapi3.SchemaRef, error) {
 	if cached, ok := b.schemaCache[t]; ok {
+		// If this type has a component name, return a reference-only SchemaRef
+		// to avoid circular references in the OpenAPI document structure
+		name := componentName(t)
+		if name != "" {
+			return &openapi3.SchemaRef{
+				Ref: "#/components/schemas/" + name,
+			}, nil
+		}
+		// For anonymous types, return the cached schema directly
 		return cached, nil
 	}
 
