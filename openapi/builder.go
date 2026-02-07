@@ -345,6 +345,11 @@ func (b *Builder) schemaRefNonNull(t reflect.Type) (*openapi3.SchemaRef, error) 
 		}
 		fallthrough
 	case reflect.Array:
+		if isUUID(t) {
+			s := openapi3.NewStringSchema()
+			s.Format = "uuid"
+			return schemaRef(s), nil
+		}
 		itemRef, err := b.schemaRefFromType(t.Elem())
 		if err != nil {
 			return nil, err
