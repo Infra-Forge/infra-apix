@@ -114,3 +114,17 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
+  ci:
+    name: CI
+    if: always()
+    needs: [test, coverage, build, sonarqube]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI status
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" || "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "CI failed or was cancelled"
+            exit 1
+          fi
+          echo "All CI checks passed"
+
